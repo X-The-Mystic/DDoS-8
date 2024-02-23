@@ -344,9 +344,9 @@ def main():
         description=cprint(title,'white',attrs=['bold']),
         epilog='''
 Example:
-    ./%(main.py) -d www.example.com -p 80 -T 2000 -Pyslow
-    ./%(main.py) -d www.domain.com -s 100 -Request
-    ./%(main.py) -d www.google.com -Synflood -T 5000 -t 10.0
+    ./%(prog)s -d www.example.com -p 80 -T 2000 -Pyslow
+    ./%(prog)s -d www.domain.com -s 100 -Request
+    ./%(prog)s -d www.google.com -Synflood -T 5000 -t 10.0
 '''
 )
   options = parser.add_argument_group('options','')
